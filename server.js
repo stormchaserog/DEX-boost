@@ -4,6 +4,7 @@ const fs = require("fs/promises");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const HOST = process.env.HOST || "0.0.0.0";
 
 const DATA_DIR = path.join(__dirname, "data");
 const COMMUNITY_FILE = path.join(DATA_DIR, "community.json");
@@ -562,8 +563,8 @@ app.get("*", (req, res) => {
 
 ensureDataFiles()
   .then(() => {
-    app.listen(PORT, () => {
-      console.log(`Token trending platform running on port ${PORT}`);
+    app.listen(PORT, HOST, () => {
+      console.log(`Token trending platform running on ${HOST}:${PORT}`);
     });
   })
   .catch((error) => {

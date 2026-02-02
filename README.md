@@ -21,6 +21,16 @@ npm start
 
 Open `http://localhost:3000` in your browser.
 
+## Replit setup
+
+1. In Replit, click **Create Repl** → **Import from GitHub**.
+2. Paste your repository URL and import.
+3. Replit will use the included `.replit` and `replit.nix` files.
+4. Click **Run** to start the server.
+
+Replit assigns a port automatically. The server already listens on `0.0.0.0`
+and `process.env.PORT`, so no extra changes are needed.
+
 ## How scoring works
 
 The trend score is a weighted blend of:
