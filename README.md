@@ -1,12 +1,12 @@
 # Token Trending Command Center
 
-All in one platform to track and trend specific tokens. It combines live on-chain
+Solana-only platform to track and trend tokens. It combines live on-chain
 liquidity, volume, and transaction data with community engagement inputs such as
 holders, unique makers, DEX Screener visitors, and reactions.
 
 ## Features
 
-- Live metrics from DexScreener (liquidity, volume, transactions, price).
+- Live Solana metrics from DexScreener (liquidity, volume, transactions, price).
 - Community engagement inputs (holders, unique makers, visitors, reactions).
 - Trend score with configurable weights.
 - Watchlist and trending ranking for multiple tokens.
@@ -39,7 +39,7 @@ Weights are normalized automatically. You can update them with the API below.
 ### Token snapshot
 
 ```
-GET /api/token/:chain/:address
+GET /api/token/solana/:address
 ```
 
 Returns token metrics, community data, trend score, and recommendations.
@@ -47,8 +47,8 @@ Returns token metrics, community data, trend score, and recommendations.
 ### Community metrics
 
 ```
-GET /api/community/:chain/:address
-POST /api/community/:chain/:address
+GET /api/community/solana/:address
+POST /api/community/solana/:address
 ```
 
 POST body example:
@@ -67,15 +67,15 @@ POST body example:
 ```
 GET /api/watchlist
 POST /api/watchlist
-DELETE /api/watchlist/:chain/:address
+DELETE /api/watchlist/solana/:address
 ```
 
 POST body example:
 
 ```json
 {
-  "chain": "ethereum",
-  "address": "0x...",
+  "chain": "solana",
+  "address": "So11111111111111111111111111111111111111112",
   "label": "My token"
 }
 ```
@@ -111,6 +111,7 @@ PUT body example:
 ## Notes
 
 - Requires Node.js 18+ for the native Fetch API.
+- This build is Solana-only. Requests must use the `solana` chain.
 - DexScreener does not provide holders or unique makers directly. Use the
   community panel to supply those numbers for higher accuracy.
 

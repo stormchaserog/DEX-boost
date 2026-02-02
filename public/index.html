@@ -13,7 +13,7 @@
           <p class="eyebrow">All in one dashboard</p>
           <h1>Token Trending Command Center</h1>
           <p class="subhead">
-            Track liquidity, volume, transactions, unique makers, holders, and community engagement.
+            Track Solana liquidity, volume, transactions, unique makers, holders, and community engagement.
           </p>
         </div>
         <div class="header-chip">
@@ -27,21 +27,14 @@
         <form id="lookup-form" class="form-grid">
           <label>
             Chain
-            <select id="chain">
-              <option value="ethereum">Ethereum</option>
-              <option value="base">Base</option>
-              <option value="arbitrum">Arbitrum</option>
-              <option value="polygon">Polygon</option>
-              <option value="bsc">BSC</option>
-              <option value="solana">Solana</option>
-            </select>
+            <input type="text" value="Solana" disabled />
           </label>
           <label class="wide">
-            Token address
+            Token mint address
             <input
               id="address"
               type="text"
-              placeholder="0x... or token mint"
+              placeholder="Solana token mint address"
               required
             />
           </label>

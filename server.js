@@ -21,6 +21,7 @@ const DEFAULT_WEIGHTS = {
   engagement: 0.1
 };
 
+const SOLANA_CHAIN = "solana";
 const CACHE_TTL_MS = 30_000;
 const dexCache = new Map();
 
@@ -78,6 +79,14 @@ function normalizeChain(chain) {
 
 function normalizeAddress(address) {
   return String(address || "").trim();
+}
+
+function enforceSolana(chain) {
+  const normalized = normalizeChain(chain);
+  if (normalized && normalized !== SOLANA_CHAIN) {
+    return { ok: false, chain: normalized };
+  }
+  return { ok: true, chain: SOLANA_CHAIN };
 }
 
 function tokenKey(chain, address) {
@@ -148,12 +157,22 @@ async function fetchDexScreener(address) {
   return data;
 }
 
-function pickBestPair(pairs) {
+function pickBestPair(pairs, chainId) {
   if (!Array.isArray(pairs) || pairs.length === 0) {
     return null;
   }
 
-  return [...pairs].sort((a, b) => {
+  const filtered = chainId
+    ? pairs.filter(
+        (pair) => normalizeChain(pair?.chainId) === normalizeChain(chainId)
+      )
+    : pairs;
+
+  if (filtered.length === 0) {
+    return null;
+  }
+
+  return [...filtered].sort((a, b) => {
     const liquidityA = toNumber(a?.liquidity?.usd, 0);
     const liquidityB = toNumber(b?.liquidity?.usd, 0);
     if (liquidityA !== liquidityB) {
@@ -318,10 +337,13 @@ app.get("/api/health", (req, res) => {
 
 app.get("/api/token/:chain/:address", async (req, res) => {
   try {
-    const chain = normalizeChain(req.params.chain);
+    const chainCheck = enforceSolana(req.params.chain);
     const address = normalizeAddress(req.params.address);
-    if (!chain || !address) {
-      return res.status(400).json({ error: "Chain and address are required." });
+    if (!chainCheck.ok) {
+      return res.status(400).json({ error: "Only Solana tokens are supported." });
+    }
+    if (!address) {
+      return res.status(400).json({ error: "Address is required." });
     }
 
     const [dexData, communityStore, weights] = await Promise.all([
@@ -330,15 +352,15 @@ app.get("/api/token/:chain/:address", async (req, res) => {
       readJson(WEIGHTS_FILE, DEFAULT_WEIGHTS)
     ]);
 
-    const pair = pickBestPair(dexData.pairs || []);
+    const pair = pickBestPair(dexData.pairs || [], SOLANA_CHAIN);
     if (!pair) {
-      return res.status(404).json({ error: "Token not found on DexScreener." });
+      return res.status(404).json({ error: "Token not found on Solana DexScreener." });
     }
 
-    const token = buildTokenInfo(pair, chain, address);
+    const token = buildTokenInfo(pair, SOLANA_CHAIN, address);
     const metrics = buildMetrics(pair);
     const community = sanitizeCommunity(
-      communityStore.tokens[tokenKey(chain, address)] || {}
+      communityStore.tokens[tokenKey(SOLANA_CHAIN, address)] || {}
     );
     const score = computeTrendScore(metrics, community, weights);
     const recommendations = buildRecommendations(metrics, community);
@@ -358,15 +380,18 @@ app.get("/api/token/:chain/:address", async (req, res) => {
 
 app.get("/api/community/:chain/:address", async (req, res) => {
   try {
-    const chain = normalizeChain(req.params.chain);
+    const chainCheck = enforceSolana(req.params.chain);
     const address = normalizeAddress(req.params.address);
-    if (!chain || !address) {
-      return res.status(400).json({ error: "Chain and address are required." });
+    if (!chainCheck.ok) {
+      return res.status(400).json({ error: "Only Solana tokens are supported." });
+    }
+    if (!address) {
+      return res.status(400).json({ error: "Address is required." });
     }
 
     const communityStore = await readJson(COMMUNITY_FILE, DEFAULT_COMMUNITY);
     const community = sanitizeCommunity(
-      communityStore.tokens[tokenKey(chain, address)] || {}
+      communityStore.tokens[tokenKey(SOLANA_CHAIN, address)] || {}
     );
     return res.json({ community });
   } catch (error) {
@@ -376,15 +401,18 @@ app.get("/api/community/:chain/:address", async (req, res) => {
 
 app.post("/api/community/:chain/:address", async (req, res) => {
   try {
-    const chain = normalizeChain(req.params.chain);
+    const chainCheck = enforceSolana(req.params.chain);
     const address = normalizeAddress(req.params.address);
-    if (!chain || !address) {
-      return res.status(400).json({ error: "Chain and address are required." });
+    if (!chainCheck.ok) {
+      return res.status(400).json({ error: "Only Solana tokens are supported." });
+    }
+    if (!address) {
+      return res.status(400).json({ error: "Address is required." });
     }
 
     const payload = req.body || {};
     const communityStore = await readJson(COMMUNITY_FILE, DEFAULT_COMMUNITY);
-    const key = tokenKey(chain, address);
+    const key = tokenKey(SOLANA_CHAIN, address);
     const existing = sanitizeCommunity(communityStore.tokens[key] || {});
 
     const updated = {
@@ -419,14 +447,18 @@ app.get("/api/watchlist", async (req, res) => {
 
 app.post("/api/watchlist", async (req, res) => {
   try {
-    const chain = normalizeChain(req.body?.chain);
+    const chainCheck = enforceSolana(req.body?.chain);
     const address = normalizeAddress(req.body?.address);
     const label = String(req.body?.label || "").trim() || null;
-    if (!chain || !address) {
-      return res.status(400).json({ error: "Chain and address are required." });
+    if (!chainCheck.ok) {
+      return res.status(400).json({ error: "Only Solana tokens are supported." });
+    }
+    if (!address) {
+      return res.status(400).json({ error: "Address is required." });
     }
 
     const list = await readJson(WATCHLIST_FILE, DEFAULT_WATCHLIST);
+    const chain = chainCheck.chain;
     const key = tokenKey(chain, address);
 
     if (!list.tokens.find((token) => token.id === key)) {
@@ -442,14 +474,17 @@ app.post("/api/watchlist", async (req, res) => {
 
 app.delete("/api/watchlist/:chain/:address", async (req, res) => {
   try {
-    const chain = normalizeChain(req.params.chain);
+    const chainCheck = enforceSolana(req.params.chain);
     const address = normalizeAddress(req.params.address);
-    if (!chain || !address) {
-      return res.status(400).json({ error: "Chain and address are required." });
+    if (!chainCheck.ok) {
+      return res.status(400).json({ error: "Only Solana tokens are supported." });
+    }
+    if (!address) {
+      return res.status(400).json({ error: "Address is required." });
     }
 
     const list = await readJson(WATCHLIST_FILE, DEFAULT_WATCHLIST);
-    const key = tokenKey(chain, address);
+    const key = tokenKey(SOLANA_CHAIN, address);
     list.tokens = list.tokens.filter((token) => token.id !== key);
     await writeJson(WATCHLIST_FILE, list);
     return res.json(list);
@@ -489,15 +524,18 @@ app.get("/api/trending", async (req, res) => {
     const snapshots = await Promise.all(
       list.tokens.map(async (token) => {
         try {
+          if (normalizeChain(token.chain) !== SOLANA_CHAIN) {
+            return { id: token.id, chain: token.chain, address: token.address, error: "Non-Solana token skipped." };
+          }
           const dexData = await fetchDexScreener(token.address);
-          const pair = pickBestPair(dexData.pairs || []);
+          const pair = pickBestPair(dexData.pairs || [], SOLANA_CHAIN);
           if (!pair) {
-            return { id: token.id, chain: token.chain, address: token.address, error: "Token not found on DexScreener." };
+            return { id: token.id, chain: token.chain, address: token.address, error: "Token not found on Solana DexScreener." };
           }
           const metrics = buildMetrics(pair);
           const community = sanitizeCommunity(communityStore.tokens[token.id] || {});
           const score = computeTrendScore(metrics, community, weights);
-          const info = buildTokenInfo(pair, token.chain, token.address);
+          const info = buildTokenInfo(pair, SOLANA_CHAIN, token.address);
           return { id: token.id, token: info, metrics, community, score };
         } catch (error) {
           return { id: token.id, chain: token.chain, address: token.address, error: error.message };

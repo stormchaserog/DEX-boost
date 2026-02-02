@@ -1,12 +1,13 @@
+const SOLANA_CHAIN = "solana";
+
 const state = {
-  chain: "ethereum",
+  chain: SOLANA_CHAIN,
   address: "",
   label: "",
   snapshot: null
 };
 
 const elements = {
-  chain: document.getElementById("chain"),
   address: document.getElementById("address"),
   label: document.getElementById("label"),
   lookupForm: document.getElementById("lookup-form"),
@@ -61,6 +62,14 @@ const formatPercent = (value) => {
   const number = Number(value);
   const sign = number > 0 ? "+" : "";
   return `${sign}${number.toFixed(2)}%`;
+};
+
+const formatChainName = (chain) => {
+  if (!chain) {
+    return "--";
+  }
+  const trimmed = String(chain).trim();
+  return trimmed ? trimmed[0].toUpperCase() + trimmed.slice(1) : "--";
 };
 
 const setStatus = (element, message) => {
@@ -118,7 +127,7 @@ function renderSnapshot(snapshot) {
   elements.trendScore.textContent = score ? score.total : "--";
   elements.tokenSummary.innerHTML = `
     <strong>${token.symbol}</strong> ${token.name}
-    <span class="muted">(${token.chain})</span>
+    <span class="muted">(${formatChainName(token.chain)})</span>
     ${token.pairUrl ? `&middot; <a href="${token.pairUrl}" target="_blank" rel="noreferrer">View pair</a>` : ""}
   `;
 
@@ -181,7 +190,7 @@ function renderWatchlist(data) {
   tokens.forEach((item) => {
     const row = document.createElement("tr");
     row.innerHTML = `
-      <td>${item.token.symbol} <span class="muted">(${item.token.chain})</span></td>
+      <td>${item.token.symbol} <span class="muted">(${formatChainName(item.token.chain)})</span></td>
       <td>${item.score.total}</td>
       <td>${formatUsd(item.metrics.liquidityUsd)}</td>
       <td>${formatUsd(item.metrics.volume24h)}</td>
@@ -196,7 +205,6 @@ function renderWatchlist(data) {
 
 elements.lookupForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-  const chain = elements.chain.value;
   const address = elements.address.value.trim();
 
   if (!address) {
@@ -206,9 +214,9 @@ elements.lookupForm.addEventListener("submit", async (event) => {
 
   setStatus(elements.lookupStatus, "Loading token metrics...");
   try {
-    const snapshot = await fetchSnapshot(chain, address);
+    const snapshot = await fetchSnapshot(SOLANA_CHAIN, address);
     renderSnapshot(snapshot);
-    state.chain = chain;
+    state.chain = SOLANA_CHAIN;
     state.address = address;
     setStatus(elements.lookupStatus, "Metrics updated.");
   } catch (error) {
@@ -217,7 +225,6 @@ elements.lookupForm.addEventListener("submit", async (event) => {
 });
 
 elements.addWatchlist.addEventListener("click", async () => {
-  const chain = elements.chain.value;
   const address = elements.address.value.trim();
   const label = elements.label.value.trim();
 
@@ -228,7 +235,7 @@ elements.addWatchlist.addEventListener("click", async () => {
 
   setStatus(elements.lookupStatus, "Adding to watchlist...");
   try {
-    await addToWatchlist(chain, address, label);
+    await addToWatchlist(SOLANA_CHAIN, address, label);
     setStatus(elements.lookupStatus, "Added to watchlist.");
     await refreshWatchlist();
   } catch (error) {
