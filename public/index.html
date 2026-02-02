@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Token Trending Command Center</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="app-header">
+        <div>
+          <p class="eyebrow">All in one dashboard</p>
+          <h1>Token Trending Command Center</h1>
+          <p class="subhead">
+            Track Solana liquidity, volume, transactions, unique makers, holders, and community engagement.
+          </p>
+        </div>
+        <div class="header-chip">
+          <span class="chip-label">Trend Score</span>
+          <span id="trend-score" class="chip-value">--</span>
+        </div>
+      </header>
+
+      <section class="panel">
+        <h2>Token lookup</h2>
+        <form id="lookup-form" class="form-grid">
+          <label>
+            Chain
+            <input type="text" value="Solana" disabled />
+          </label>
+          <label class="wide">
+            Token mint address
+            <input
+              id="address"
+              type="text"
+              placeholder="Solana token mint address"
+              required
+            />
+          </label>
+          <label>
+            Label (optional)
+            <input id="label" type="text" placeholder="Example: My token" />
+          </label>
+          <div class="button-row">
+            <button type="submit" class="primary">Fetch metrics</button>
+            <button type="button" id="add-watchlist">Add to watchlist</button>
+          </div>
+        </form>
+        <p id="lookup-status" class="status"></p>
+      </section>
+
+      <section class="grid">
+        <div class="card">
+          <h3>Live token metrics</h3>
+          <div id="token-summary" class="token-summary">No token loaded yet.</div>
+          <div class="metrics-grid">
+            <div>
+              <span>Liquidity (USD)</span>
+              <strong id="metric-liquidity">--</strong>
+            </div>
+            <div>
+              <span>24h Volume</span>
+              <strong id="metric-volume">--</strong>
+            </div>
+            <div>
+              <span>24h Transactions</span>
+              <strong id="metric-transactions">--</strong>
+            </div>
+            <div>
+              <span>Unique makers</span>
+              <strong id="metric-makers">--</strong>
+            </div>
+            <div>
+              <span>Holders</span>
+              <strong id="metric-holders">--</strong>
+            </div>
+            <div>
+              <span>DEX Screener visitors</span>
+              <strong id="metric-visitors">--</strong>
+            </div>
+          </div>
+          <div class="price-row">
+            <div>
+              <span>Price (USD)</span>
+              <strong id="metric-price">--</strong>
+            </div>
+            <div>
+              <span>24h Change</span>
+              <strong id="metric-change">--</strong>
+            </div>
+            <div>
+              <span>Pair</span>
+              <strong id="metric-pair">--</strong>
+            </div>
+          </div>
+          <p class="disclaimer">
+            Unique makers and holders can be manually updated to improve accuracy.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3>Community engagement</h3>
+          <form id="community-form" class="form-stack">
+            <label>
+              Holders
+              <input id="holders" type="number" min="0" step="1" />
+            </label>
+            <label>
+              Unique makers
+              <input id="unique-makers" type="number" min="0" step="1" />
+            </label>
+            <label>
+              DEX Screener visitors (24h)
+              <input id="visitors" type="number" min="0" step="1" />
+            </label>
+            <div class="reaction-grid">
+              <label>
+                Bullish reactions
+                <input id="reaction-bullish" type="number" min="0" step="1" />
+              </label>
+              <label>
+                Neutral reactions
+                <input id="reaction-neutral" type="number" min="0" step="1" />
+              </label>
+              <label>
+                Bearish reactions
+                <input id="reaction-bearish" type="number" min="0" step="1" />
+              </label>
+            </div>
+            <button type="submit" class="primary">Update community metrics</button>
+            <p id="community-status" class="status"></p>
+          </form>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Trend boosters</h2>
+        <div id="recommendations" class="recommendations">
+          <p class="muted">Recommendations will appear after loading a token.</p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Trending watchlist</h2>
+          <button id="refresh-watchlist">Refresh list</button>
+        </div>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Token</th>
+                <th>Score</th>
+                <th>Liquidity</th>
+                <th>Volume 24h</th>
+                <th>Tx 24h</th>
+                <th>Unique makers</th>
+                <th>Holders</th>
+                <th>Visitors</th>
+              </tr>
+            </thead>
+            <tbody id="watchlist-body">
+              <tr>
+                <td colspan="8" class="muted">Add tokens to build the list.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+    <script src="app.js"></script>
+  </body>
+</html>
